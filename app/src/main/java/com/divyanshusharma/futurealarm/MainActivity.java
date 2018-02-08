@@ -28,6 +28,8 @@ import android.widget.TimePicker;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -41,8 +43,7 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<Alarm> alarms= new ArrayList<Alarm>();
     private int newYear=-1, newMonth=-1, newDay=-1, newHour=-1, newMinute=-1;
     private TextView check;
-
-    String reminder="";
+    private String reminder="", allSavedAlarms="";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,10 +52,35 @@ public class MainActivity extends AppCompatActivity {
 
         check= (TextView) findViewById(R.id.Check);
 
-        //updateDisplayedAlarms();
+        sharedpreferences= getPreferences(MODE_PRIVATE);
 
+        /*
+        SharedPreferences.Editor prefsEditor = sharedpreferences.edit();
+        Gson gson = new Gson();
+        Alarm testingAlarm=new Alarm(new Date(),false,"Shared Pref worked");
+        String json = gson.toJson(testingAlarm); // myObject - instance of MyObject
+        prefsEditor.putString("Saved Alarms", json);
+        prefsEditor.commit();
+        */
+
+        Gson gson1= new Gson();
+        if(!sharedpreferences.getAll().isEmpty()) // if sharedpreferences is not empty
+        {
+            String json1= sharedpreferences.getString("Saved Alarms","");
+            check.setText(json1);
+            allSavedAlarms=json1;
+
+        }
+        else
+            Toast.makeText(this,"Empty Shared Preferences",Toast.LENGTH_LONG).show();
+
+
+
+        // render all existing alarms
+        /*
         if(!alarms.isEmpty())
             check.setText(alarms.toString());
+         */
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -65,7 +91,6 @@ public class MainActivity extends AppCompatActivity {
 
         }
         });
-
     }
 
     public void showTimePicker(View view){
@@ -85,17 +110,6 @@ public class MainActivity extends AppCompatActivity {
 
                 if( VerifyData(newDay,newMonth,newYear, newHour, newMinute) )// true
                 {
-                    // initialize a new Date and add it to the arraylist
-                    /*Date tempDate= new Date(newYear-1900,newMonth,newDay,newHour,newMinute,0);
-                    Alarm tempAlarm=new Alarm(tempDate,true,"reminder");
-                    alarms.add(tempAlarm);
-
-                    //saveSharedPreferences();
-
-                    //updateDisplayedAlarms();
-
-                    // add code to display input data
-                    check.setText(alarms.toString());*/
                     getReminderInput();
 
                 }
@@ -106,61 +120,47 @@ public class MainActivity extends AppCompatActivity {
 
             }
         }, hour, minute, false);//Yes 24 hour time
-        //mTimePicker.setTitle("Select Time");
         mTimePicker.show();
 
     }
 
     public void saveSharedPreferences(){
 
-        SharedPreferences.Editor editor = getSharedPreferences("Saved_Alarms", MODE_PRIVATE).edit();
-        editor.putString("SavedAlarms", alarms.toString());
-        editor.apply();
+
     }
 
     public void updateDisplayedAlarms(){
 
-        if(sharedpreferences!=null && sharedpreferences.contains("SavedAlarms"))
-        {
-            //Alarms=  new ArrayList<Alarm>();
-            //check.setText(Alarms.toString());
-            check.setText(sharedpreferences.getString("SavedAlarms", ""));
-        }
+
 
     }
 
     public void getReminderInput(){
 
-
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         builder.setTitle("Reminder: ");
 
-        // Set up the input
         final AutoCompleteTextView input = new AutoCompleteTextView(this);
-        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
-        //input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
         builder.setView(input);
 
-        // Set up the buttons
         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 reminder = input.getText().toString();
 
-                //////////////////
-
                 Date tempDate= new Date(newYear-1900,newMonth,newDay,newHour,newMinute,0);
                 Alarm tempAlarm=new Alarm(tempDate,true,reminder);
                 alarms.add(tempAlarm);
 
-                //saveSharedPreferences();
+                ////////////////
+                SharedPreferences.Editor prefsEditor = sharedpreferences.edit();
+                Gson gson = new Gson();
+                String json = gson.toJson(alarms.toString()); // myObject - instance of MyObject
+                prefsEditor.putString("Saved Alarms", json);
+                prefsEditor.commit();
+                /////////////
 
-                //updateDisplayedAlarms();
-
-                // add code to display input data
                 check.setText(alarms.toString());
-
-                ///////////////
 
             }
         });

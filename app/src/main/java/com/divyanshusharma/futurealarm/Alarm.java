@@ -62,6 +62,8 @@ public class Alarm {
         this.date=date;
         this.reminder=reminder;
     }
+    public Alarm(){}
+
 
     @Override
     public String toString()
