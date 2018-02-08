@@ -20,7 +20,7 @@ public class Alarm {
     {
         String[] splitStrings=compositeAlarm.split("-");
 
-        SimpleDateFormat formatter=new SimpleDateFormat("E, MMM dd HH:mm:ss yyyy");
+        SimpleDateFormat formatter=new SimpleDateFormat("E MMM dd HH:mm:ss zzz yyyy");
 
         try
         {

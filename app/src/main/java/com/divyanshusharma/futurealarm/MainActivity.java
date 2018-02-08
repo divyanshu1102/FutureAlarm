@@ -33,6 +33,7 @@ import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 import static java.lang.System.in;
 
@@ -67,12 +68,27 @@ public class MainActivity extends AppCompatActivity {
         if(!sharedpreferences.getAll().isEmpty()) // if sharedpreferences is not empty
         {
             String json1= sharedpreferences.getString("Saved Alarms","");
-            check.setText(json1);
             allSavedAlarms=json1;
+            allSavedAlarms=allSavedAlarms.substring(2,allSavedAlarms.length()-2);
+
+            String[] splitallSavedAlarms=allSavedAlarms.split(", "); // separate Alarm objects
+
+            for(String temp:splitallSavedAlarms)
+            {
+                //Log.i("Temp",temp);
+                alarms.add(new Alarm(temp)); // add each object
+            }
+
+            //Toast.makeText(this,allSavedAlarms,Toast.LENGTH_LONG).show();
+            check.setText(alarms.toString());
+
 
         }
         else
+        {
             Toast.makeText(this,"Empty Shared Preferences",Toast.LENGTH_LONG).show();
+            //alarms= new ArrayList<Alarm>();
+        }
 
 
 
@@ -124,16 +140,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void saveSharedPreferences(){
-
-
-    }
-
-    public void updateDisplayedAlarms(){
-
-
-
-    }
 
     public void getReminderInput(){
 
@@ -151,6 +157,9 @@ public class MainActivity extends AppCompatActivity {
                 Date tempDate= new Date(newYear-1900,newMonth,newDay,newHour,newMinute,0);
                 Alarm tempAlarm=new Alarm(tempDate,true,reminder);
                 alarms.add(tempAlarm);
+
+                //Alarm testingStringtoAlarm= new Alarm(tempAlarm.toString());
+                //Toast.makeText(MainActivity.this,""+testingStringtoAlarm.getDate()+"-"+testingStringtoAlarm.getaBoolean()+"-"+testingStringtoAlarm.getReminder(),Toast.LENGTH_LONG).show();
 
                 ////////////////
                 SharedPreferences.Editor prefsEditor = sharedpreferences.edit();
