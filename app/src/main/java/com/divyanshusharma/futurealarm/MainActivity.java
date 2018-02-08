@@ -1,11 +1,13 @@
 package com.divyanshusharma.futurealarm;
 
 import android.app.AlarmManager;
+import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.PendingIntent;
 import android.app.TimePickerDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -19,6 +21,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.AutoCompleteTextView;
 import android.widget.DatePicker;
 import android.widget.TextView;
 import android.widget.TimePicker;
@@ -26,103 +29,40 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 
 import static java.lang.System.in;
 
 public class MainActivity extends AppCompatActivity {
 
-        private ArrayList<Alarm> Alarms = new ArrayList<Alarm>();
+    SharedPreferences sharedpreferences;
+
+    private ArrayList<Alarm> alarms= new ArrayList<Alarm>();
     private int newYear=-1, newMonth=-1, newDay=-1, newHour=-1, newMinute=-1;
     private TextView check;
+
+    String reminder="";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        //setSupportActionBar(toolbar);
 
         check= (TextView) findViewById(R.id.Check);
 
-        if(!Alarms.isEmpty())
-        {
-            check.setText(Alarms.toString());
-        }
+        //updateDisplayedAlarms();
 
-        //SoundAlarm();
+        if(!alarms.isEmpty())
+            check.setText(alarms.toString());
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG).setAction("Action", null).show();
 
-                //final View tempView= view;
+                showDatePicker(view); // creating an alarm
 
-                //showTimePicker(view);
-                showDatePicker(view);
-
-
-                /*
-                Calendar mcurrentTime = Calendar.getInstance();
-                int hour = mcurrentTime.get(Calendar.HOUR_OF_DAY);
-                int minute = mcurrentTime.get(Calendar.MINUTE);
-
-                TimePickerDialog mTimePicker;
-                mTimePicker = new TimePickerDialog(MainActivity.this, new TimePickerDialog.OnTimeSetListener() {
-                    @Override
-                    public void onTimeSet(TimePicker timePicker, int selectedHour, int selectedMinute) {
-
-                        newHour=selectedHour;
-                        newMinute=selectedMinute;
-
-                        if(  VerifyData(newDay,newMonth,newYear, newHour, newMinute) )// true
-                        {
-                            // initialize a new Date and add it to the arraylist
-                            Date tempDate= new Date(newYear-1900,newMonth,newDay,newHour,newMinute,0);
-                            Alarm tempAlarm=new Alarm(tempDate,true,"reminder");
-                            Alarms.add(tempAlarm);
-                            check.setText(Alarms.toString());
-
-
-                            // add more code here
-
-
-
-
-                        }
-                        else
-                        {
-                            Snackbar.make(tempView, "Wrong Input", Snackbar.LENGTH_LONG).setAction("Action", null).show();
-                        }
-
-                    }
-                }, hour, minute, false);//Yes 24 hour time
-                //mTimePicker.setTitle("Select Time");
-                mTimePicker.show();
-                */
-
-                /*
-                Calendar mcurrentDate = Calendar.getInstance();
-                int mYear = mcurrentDate.get(Calendar.YEAR);
-                int mMonth = mcurrentDate.get(Calendar.MONTH);
-                int mDay = mcurrentDate.get(Calendar.DAY_OF_MONTH);
-
-                DatePickerDialog mDatePicker;
-                mDatePicker = new DatePickerDialog(MainActivity.this, new DatePickerDialog.OnDateSetListener() {
-                    public void onDateSet(DatePicker datepicker, int selectedyear, int selectedmonth, int selectedday) {
-
-                        //selectedmonth = selectedmonth + 1;
-                        newYear=selectedyear;
-                        newMonth=selectedmonth;
-                        newDay=selectedday;
-
-                    }
-                }, mYear, mMonth, mDay);
-                //mDatePicker.setTitle("Select Date");
-                mDatePicker.show();
-                */
         }
         });
 
@@ -143,19 +83,20 @@ public class MainActivity extends AppCompatActivity {
                 newHour=selectedHour;
                 newMinute=selectedMinute;
 
-                if(  VerifyData(newDay,newMonth,newYear, newHour, newMinute) )// true
+                if( VerifyData(newDay,newMonth,newYear, newHour, newMinute) )// true
                 {
                     // initialize a new Date and add it to the arraylist
-                    Date tempDate= new Date(newYear-1900,newMonth,newDay,newHour,newMinute,0);
+                    /*Date tempDate= new Date(newYear-1900,newMonth,newDay,newHour,newMinute,0);
                     Alarm tempAlarm=new Alarm(tempDate,true,"reminder");
-                    Alarms.add(tempAlarm);
-                    check.setText(Alarms.toString());
+                    alarms.add(tempAlarm);
 
+                    //saveSharedPreferences();
 
-                    // add more code here
+                    //updateDisplayedAlarms();
 
-
-
+                    // add code to display input data
+                    check.setText(alarms.toString());*/
+                    getReminderInput();
 
                 }
                 else
@@ -167,6 +108,71 @@ public class MainActivity extends AppCompatActivity {
         }, hour, minute, false);//Yes 24 hour time
         //mTimePicker.setTitle("Select Time");
         mTimePicker.show();
+
+    }
+
+    public void saveSharedPreferences(){
+
+        SharedPreferences.Editor editor = getSharedPreferences("Saved_Alarms", MODE_PRIVATE).edit();
+        editor.putString("SavedAlarms", alarms.toString());
+        editor.apply();
+    }
+
+    public void updateDisplayedAlarms(){
+
+        if(sharedpreferences!=null && sharedpreferences.contains("SavedAlarms"))
+        {
+            //Alarms=  new ArrayList<Alarm>();
+            //check.setText(Alarms.toString());
+            check.setText(sharedpreferences.getString("SavedAlarms", ""));
+        }
+
+    }
+
+    public void getReminderInput(){
+
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        builder.setTitle("Reminder: ");
+
+        // Set up the input
+        final AutoCompleteTextView input = new AutoCompleteTextView(this);
+        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+        //input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        builder.setView(input);
+
+        // Set up the buttons
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                reminder = input.getText().toString();
+
+                //////////////////
+
+                Date tempDate= new Date(newYear-1900,newMonth,newDay,newHour,newMinute,0);
+                Alarm tempAlarm=new Alarm(tempDate,true,reminder);
+                alarms.add(tempAlarm);
+
+                //saveSharedPreferences();
+
+                //updateDisplayedAlarms();
+
+                // add code to display input data
+                check.setText(alarms.toString());
+
+                ///////////////
+
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        builder.show();
+
 
     }
 
@@ -183,7 +189,6 @@ public class MainActivity extends AppCompatActivity {
         mDatePicker = new DatePickerDialog(MainActivity.this, new DatePickerDialog.OnDateSetListener() {
             public void onDateSet(DatePicker datepicker, int selectedyear, int selectedmonth, int selectedday) {
 
-                //selectedmonth = selectedmonth + 1;
                 newYear=selectedyear;
                 newMonth=selectedmonth;
                 newDay=selectedday;
@@ -192,7 +197,7 @@ public class MainActivity extends AppCompatActivity {
 
             }
         }, mYear, mMonth, mDay);
-        //mDatePicker.setTitle("Select Date");
+
         mDatePicker.show();
 
     }
