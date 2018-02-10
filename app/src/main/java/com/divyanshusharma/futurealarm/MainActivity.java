@@ -16,6 +16,8 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
@@ -43,26 +45,25 @@ public class MainActivity extends AppCompatActivity {
 
     private ArrayList<Alarm> alarms= new ArrayList<Alarm>();
     private int newYear=-1, newMonth=-1, newDay=-1, newHour=-1, newMinute=-1;
-    private TextView check;
+    //private TextView check;
     private String reminder="", allSavedAlarms="";
+
+    RecyclerView recyclerView;
+    RecyclerView.LayoutManager layoutManager;
+    RecyclerView.Adapter adapter;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        check= (TextView) findViewById(R.id.Check);
+        //check= (TextView) findViewById(R.id.Check);
+        recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        layoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(layoutManager);
 
         sharedpreferences= getPreferences(MODE_PRIVATE);
-
-        /*
-        SharedPreferences.Editor prefsEditor = sharedpreferences.edit();
-        Gson gson = new Gson();
-        Alarm testingAlarm=new Alarm(new Date(),false,"Shared Pref worked");
-        String json = gson.toJson(testingAlarm); // myObject - instance of MyObject
-        prefsEditor.putString("Saved Alarms", json);
-        prefsEditor.commit();
-        */
 
         Gson gson1= new Gson();
         if(!sharedpreferences.getAll().isEmpty()) // if sharedpreferences is not empty
@@ -80,23 +81,16 @@ public class MainActivity extends AppCompatActivity {
             }
 
             //Toast.makeText(this,allSavedAlarms,Toast.LENGTH_LONG).show();
-            check.setText(alarms.toString());
+            adapter = new RecyclerAdapter(alarms, MainActivity.this);
+            recyclerView.setAdapter(adapter);
+
+            //check.setText(alarms.toString());
 
 
         }
-        else
-        {
-            Toast.makeText(this,"Empty Shared Preferences",Toast.LENGTH_LONG).show();
-            //alarms= new ArrayList<Alarm>();
+        else {
+            Toast.makeText(this, "Empty Shared Preferences", Toast.LENGTH_LONG).show();
         }
-
-
-
-        // render all existing alarms
-        /*
-        if(!alarms.isEmpty())
-            check.setText(alarms.toString());
-         */
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -152,24 +146,25 @@ public class MainActivity extends AppCompatActivity {
         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                reminder = input.getText().toString();
+            reminder = input.getText().toString();
 
-                Date tempDate= new Date(newYear-1900,newMonth,newDay,newHour,newMinute,0);
-                Alarm tempAlarm=new Alarm(tempDate,true,reminder);
-                alarms.add(tempAlarm);
+            Date tempDate= new Date(newYear-1900,newMonth,newDay,newHour,newMinute,0);
+            Alarm tempAlarm=new Alarm(tempDate,true,reminder);
+            alarms.add(tempAlarm);
 
-                //Alarm testingStringtoAlarm= new Alarm(tempAlarm.toString());
-                //Toast.makeText(MainActivity.this,""+testingStringtoAlarm.getDate()+"-"+testingStringtoAlarm.getaBoolean()+"-"+testingStringtoAlarm.getReminder(),Toast.LENGTH_LONG).show();
+            //Alarm testingStringtoAlarm= new Alarm(tempAlarm.toString());
+            //Toast.makeText(MainActivity.this,""+testingStringtoAlarm.getDate()+"-"+testingStringtoAlarm.getaBoolean()+"-"+testingStringtoAlarm.getReminder(),Toast.LENGTH_LONG).show();
 
-                ////////////////
-                SharedPreferences.Editor prefsEditor = sharedpreferences.edit();
-                Gson gson = new Gson();
-                String json = gson.toJson(alarms.toString()); // myObject - instance of MyObject
-                prefsEditor.putString("Saved Alarms", json);
-                prefsEditor.commit();
-                /////////////
+            ////////////////
+            SharedPreferences.Editor prefsEditor = sharedpreferences.edit();
+            Gson gson = new Gson();
+            String json = gson.toJson(alarms.toString()); // myObject - instance of MyObject
+            prefsEditor.putString("Saved Alarms", json);
+            prefsEditor.commit();
+            /////////////
 
-                check.setText(alarms.toString());
+            //check.setText(alarms.toString());
+            adapter.notifyDataSetChanged();
 
             }
         });
